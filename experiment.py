@@ -7,7 +7,7 @@ from utils import data_loader
 import pytorch_lightning as pl
 from torchvision import transforms
 import torchvision.utils as vutils
-from torchvision.datasets import CelebA
+from torchvision.datasets import CIFAR10
 from torch.utils.data import DataLoader
 
 
@@ -32,6 +32,7 @@ class VAEXperiment(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
+        labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -46,6 +47,7 @@ class VAEXperiment(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
+        labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -56,7 +58,7 @@ class VAEXperiment(pl.LightningModule):
 
         return val_loss
 
-    def validation_end(self, outputs):
+    def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
         self.sample_images()
@@ -65,6 +67,7 @@ class VAEXperiment(pl.LightningModule):
     def sample_images(self):
         # Get sample reconstruction image
         test_input, test_label = next(iter(self.sample_dataloader))
+        test_label = torch.nn.functional.one_hot(test_label)
         test_input = test_input.to(self.curr_device)
         test_label = test_label.to(self.curr_device)
         recons = self.model.generate(test_input, labels = test_label)
@@ -136,11 +139,11 @@ class VAEXperiment(pl.LightningModule):
     def train_dataloader(self):
         transform = self.data_transforms()
 
-        if self.params['dataset'] == 'celeba':
-            dataset = CelebA(root = self.params['data_path'],
-                             split = "train",
+        if self.params['dataset'] == 'cifar10':
+            dataset = CIFAR10(root = self.params['data_path'],
+                             train=True,
                              transform=transform,
-                             download=False)
+                             download=True)
         else:
             raise ValueError('Undefined dataset type')
 
@@ -154,11 +157,11 @@ class VAEXperiment(pl.LightningModule):
     def val_dataloader(self):
         transform = self.data_transforms()
 
-        if self.params['dataset'] == 'celeba':
-            self.sample_dataloader =  DataLoader(CelebA(root = self.params['data_path'],
-                                                        split = "test",
-                                                        transform=transform,
-                                                        download=False),
+        if self.params['dataset'] == 'cifar10':
+            self.sample_dataloader =  DataLoader(CIFAR10(root = self.params['data_path'],
+                                                 train=False,
+                                                 transform=transform,
+                                                 download=True),
                                                  batch_size= 144,
                                                  shuffle = True,
                                                  drop_last=True)
@@ -173,7 +176,7 @@ class VAEXperiment(pl.LightningModule):
         SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
         SetScale = transforms.Lambda(lambda X: X/X.sum(0).expand_as(X))
 
-        if self.params['dataset'] == 'celeba':
+        if self.params['dataset'] == 'cifar10':
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),
