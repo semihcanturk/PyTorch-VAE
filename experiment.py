@@ -32,7 +32,8 @@ class VAEXperiment(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
-        labels = torch.nn.functional.one_hot(labels)
+        if len(labels.shape) == 1:
+            labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -47,7 +48,8 @@ class VAEXperiment(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
-        labels = torch.nn.functional.one_hot(labels)
+        if len(labels.shape) == 1:
+            labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels = labels)
@@ -67,7 +69,8 @@ class VAEXperiment(pl.LightningModule):
     def sample_images(self):
         # Get sample reconstruction image
         test_input, test_label = next(iter(self.sample_dataloader))
-        test_label = torch.nn.functional.one_hot(test_label)
+        if len(test_label.shape) == 1:
+            test_label = torch.nn.functional.one_hot(test_label)
         test_input = test_input.to(self.curr_device)
         test_label = test_label.to(self.curr_device)
         recons = self.model.generate(test_input, labels = test_label)
@@ -143,7 +146,7 @@ class VAEXperiment(pl.LightningModule):
             dataset = CIFAR10(root = self.params['data_path'],
                              train=True,
                              transform=transform,
-                             download=True)
+                             download=False)
         elif self.params['dataset'] == 'celeba':
             dataset = CelebA(root = self.params['data_path'],
                              split = "train",
@@ -166,7 +169,7 @@ class VAEXperiment(pl.LightningModule):
             self.sample_dataloader = DataLoader(CIFAR10(root = self.params['data_path'],
                                                  train=False,
                                                  transform=transform,
-                                                 download=True),
+                                                 download=False),
                                                  batch_size= 144,
                                                  shuffle = True,
                                                  drop_last=True)
