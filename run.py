@@ -14,7 +14,7 @@ parser.add_argument('--config',  '-c',
                     dest="filename",
                     metavar='FILE',
                     help =  'path to the config file',
-                    default='./configs/cvae.yaml')
+                    default='./configs/vae.yaml')
 
 args = parser.parse_args()
 with open(args.filename, 'r') as file:
