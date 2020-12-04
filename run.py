@@ -42,6 +42,7 @@ experiment = VAEXperiment(model,
                           config['exp_params'])
 
 runner = Trainer(default_root_dir=f"{tt_logger.save_dir}",
+                 checkpoint_callback=True,
                  min_epochs=1,
                  logger=tt_logger,
                  log_every_n_steps=100,

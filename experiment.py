@@ -57,7 +57,7 @@ class VAEXperiment(pl.LightningModule):
                                             M_N = self.params['batch_size']/ self.num_val_imgs,
                                             optimizer_idx = optimizer_idx,
                                             batch_idx = batch_idx)
-
+        #self.logger.experiment.log({'val_loss': val_loss})
         return val_loss
 
     def validation_epoch_end(self, outputs):

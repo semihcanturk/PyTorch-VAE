@@ -26,7 +26,7 @@ with open(args.filename, 'r') as file:
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
 
-model_dict = torch.load('/Users/semo/PycharmProjects/VAE Projects/PyTorch-VAE/logs/ConditionalVAE/version_27/checkpoints/epoch=0.ckpt')
+model_dict = torch.load('logs/ConditionalVAE/version_38/checkpoints/epoch=25.ckpt')
 newdict = dict()
 for k, v in model_dict['state_dict'].items():
     knew = k.split('.', 1)[1:][0]
