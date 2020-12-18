@@ -30,13 +30,13 @@ class VAEXperiment(pl.LightningModule):
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
 
-    def training_step(self, batch, batch_idx, optimizer_idx = 0):
+    def training_step(self, batch, batch_idx, optimizer_idx=0):
         real_img, labels = batch
         if len(labels.shape) == 1:
             labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img, labels=labels)
         train_loss = self.model.loss_function(*results,
                                               M_N = self.params['batch_size']/ self.num_train_imgs,
                                               optimizer_idx=optimizer_idx,
@@ -52,18 +52,20 @@ class VAEXperiment(pl.LightningModule):
             labels = torch.nn.functional.one_hot(labels)
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img, labels=labels)
         val_loss = self.model.loss_function(*results,
-                                            M_N = self.params['batch_size']/ self.num_val_imgs,
-                                            optimizer_idx = optimizer_idx,
-                                            batch_idx = batch_idx)
-        #self.logger.experiment.log({'val_loss': val_loss})
+                                            M_N=self.params['batch_size']/ self.num_val_imgs,
+                                            optimizer_idx=optimizer_idx,
+                                            batch_idx=batch_idx)
+        # self.logger.experiment.log({'val_loss': val_loss})
+        # self.log('val_loss', val_loss, on_step=True, on_epoch=True, prog_bar=True)
         return val_loss
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         tensorboard_logs = {'avg_val_loss': avg_loss}
         self.sample_images()
+        self.logger.experiment.log({'val_loss': avg_loss})
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
     def sample_images(self):
@@ -106,6 +108,28 @@ class VAEXperiment(pl.LightningModule):
 
         optims = []
         scheds = []
+
+        try:
+            if self.params['name'] is 'CSVAE':
+                params_without_delta = [param for name, param in self.model.named_parameters() if 'decoder_z_to_y' not in name]
+                params_delta = [param for name, param in self.model.named_parameters() if 'decoder_z_to_y' in name]
+
+                opt_without_delta = optim.Adam(params_without_delta, lr=(1e-3) / 2)
+                scheduler_without_delta = optim.lr_scheduler.MultiStepLR(opt_without_delta,
+                                                                         milestones=[pow(3, i) for i in range(7)],
+                                                                         gamma=pow(0.1, 1 / 7))
+                opt_delta = optim.Adam(params_delta, lr=(1e-3) / 2)
+                scheduler_delta = optim.lr_scheduler.MultiStepLR(opt_delta, milestones=[pow(3, i) for i in range(7)],
+                                                                 gamma=pow(0.1, 1 / 7))
+
+                optims.append(opt_without_delta)
+                optims.append(opt_delta)
+                scheds.append(scheduler_without_delta)
+                scheds.append(scheduler_delta)
+                return optims, scheds
+        except:
+            pass
+
 
         optimizer = optim.Adam(self.model.parameters(),
                                lr=self.params['LR'],
@@ -158,6 +182,7 @@ class VAEXperiment(pl.LightningModule):
         self.num_train_imgs = len(dataset)
         return DataLoader(dataset,
                           batch_size= self.params['batch_size'],
+                          num_workers=12,
                           shuffle = True,
                           drop_last=True)
 
@@ -171,6 +196,7 @@ class VAEXperiment(pl.LightningModule):
                                                  transform=transform,
                                                  download=False),
                                                  batch_size= 144,
+                                                 num_workers=12,
                                                  shuffle = True,
                                                  drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
@@ -179,6 +205,7 @@ class VAEXperiment(pl.LightningModule):
                                                        split="test",
                                                        transform=transform,
                                                        download=False),
+                                                num_workers=12,
                                                 batch_size=144,
                                                 shuffle=True,
                                                 drop_last=True)
