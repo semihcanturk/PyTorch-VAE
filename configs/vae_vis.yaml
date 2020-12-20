@@ -5,7 +5,7 @@ model_params:
 
 exp_params:
   dataset: wikiart
-  data_path: "../../../../../../miniscratch/canturks/data/"
+  data_path: "../../../../../../miniscratch/huguet/data/"
   img_size: 64
   batch_size: 256 # Better to have a square number
   LR: 0.0001
