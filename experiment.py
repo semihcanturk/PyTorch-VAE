@@ -1,14 +1,18 @@
 import math
+import numpy as np
 import torch
 from torch import optim
 from models import BaseVAE
 from models.types_ import *
 from utils import data_loader
 import pytorch_lightning as pl
-from torchvision import transforms
+from torchvision import transforms, datasets
 import torchvision.utils as vutils
 from torchvision.datasets import CIFAR10, CelebA
 from torch.utils.data import DataLoader
+from PIL import ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class VAEXperiment(pl.LightningModule):
@@ -33,28 +37,36 @@ class VAEXperiment(pl.LightningModule):
     def training_step(self, batch, batch_idx, optimizer_idx=0):
         real_img, labels = batch
         if len(labels.shape) == 1:
-            labels = torch.nn.functional.one_hot(labels)
+            if self.params['dataset'] == 'wikiart':
+                num_classes=27
+            else:
+                num_classes=-1
+            labels = torch.nn.functional.one_hot(labels, num_classes)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels=labels)
         train_loss = self.model.loss_function(*results,
-                                              M_N = self.params['batch_size']/ self.num_train_imgs,
+                                              M_N=self.params['batch_size'] / self.num_train_imgs,
                                               optimizer_idx=optimizer_idx,
-                                              batch_idx = batch_idx)
+                                              batch_idx=batch_idx)
 
         self.logger.experiment.log({key: val.item() for key, val in train_loss.items()})
 
         return train_loss
 
-    def validation_step(self, batch, batch_idx, optimizer_idx = 0):
+    def validation_step(self, batch, batch_idx, optimizer_idx=0):
         real_img, labels = batch
         if len(labels.shape) == 1:
-            labels = torch.nn.functional.one_hot(labels)
+            if self.params['dataset'] == 'wikiart':
+                num_classes = 27
+            else:
+                num_classes = -1
+            labels = torch.nn.functional.one_hot(labels, num_classes)
         self.curr_device = real_img.device
 
         results = self.forward(real_img, labels=labels)
         val_loss = self.model.loss_function(*results,
-                                            M_N=self.params['batch_size']/ self.num_val_imgs,
+                                            M_N=self.params['batch_size'] / self.num_val_imgs,
                                             optimizer_idx=optimizer_idx,
                                             batch_idx=batch_idx)
         # self.logger.experiment.log({'val_loss': val_loss})
@@ -72,10 +84,14 @@ class VAEXperiment(pl.LightningModule):
         # Get sample reconstruction image
         test_input, test_label = next(iter(self.sample_dataloader))
         if len(test_label.shape) == 1:
-            test_label = torch.nn.functional.one_hot(test_label)
+            if self.params['dataset'] == 'wikiart':
+                num_classes = 27
+            else:
+                num_classes = -1
+            test_label = torch.nn.functional.one_hot(test_label, num_classes)
         test_input = test_input.to(self.curr_device)
         test_label = test_label.to(self.curr_device)
-        recons = self.model.generate(test_input, labels = test_label)
+        recons = self.model.generate(test_input, labels=test_label)
         vutils.save_image(recons.data,
                           f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
                           f"recons_{self.logger.name}_{self.current_epoch}.png",
@@ -91,7 +107,7 @@ class VAEXperiment(pl.LightningModule):
         try:
             samples = self.model.sample(144,
                                         self.curr_device,
-                                        labels = test_label)
+                                        labels=test_label)
             vutils.save_image(samples.cpu().data,
                               f"{self.logger.save_dir}{self.logger.name}/version_{self.logger.version}/"
                               f"{self.logger.name}_{self.current_epoch}.png",
@@ -100,9 +116,7 @@ class VAEXperiment(pl.LightningModule):
         except:
             pass
 
-
-        del test_input, recons #, samples
-
+        del test_input, recons  # , samples
 
     def configure_optimizers(self):
 
@@ -111,7 +125,8 @@ class VAEXperiment(pl.LightningModule):
 
         try:
             if self.params['name'] is 'CSVAE':
-                params_without_delta = [param for name, param in self.model.named_parameters() if 'decoder_z_to_y' not in name]
+                params_without_delta = [param for name, param in self.model.named_parameters() if
+                                        'decoder_z_to_y' not in name]
                 params_delta = [param for name, param in self.model.named_parameters() if 'decoder_z_to_y' in name]
 
                 opt_without_delta = optim.Adam(params_without_delta, lr=(1e-3) / 2)
@@ -130,7 +145,6 @@ class VAEXperiment(pl.LightningModule):
         except:
             pass
 
-
         optimizer = optim.Adam(self.model.parameters(),
                                lr=self.params['LR'],
                                weight_decay=self.params['weight_decay'])
@@ -138,7 +152,7 @@ class VAEXperiment(pl.LightningModule):
         # Check if more than 1 optimizer is required (Used for adversarial training)
         try:
             if self.params['LR_2'] is not None:
-                optimizer2 = optim.Adam(getattr(self.model,self.params['submodel']).parameters(),
+                optimizer2 = optim.Adam(getattr(self.model, self.params['submodel']).parameters(),
                                         lr=self.params['LR_2'])
                 optims.append(optimizer2)
         except:
@@ -147,14 +161,14 @@ class VAEXperiment(pl.LightningModule):
         try:
             if self.params['scheduler_gamma'] is not None:
                 scheduler = optim.lr_scheduler.ExponentialLR(optims[0],
-                                                             gamma = self.params['scheduler_gamma'])
+                                                             gamma=self.params['scheduler_gamma'])
                 scheds.append(scheduler)
 
                 # Check if another scheduler is required for the second optimizer
                 try:
                     if self.params['scheduler_gamma_2'] is not None:
                         scheduler2 = optim.lr_scheduler.ExponentialLR(optims[1],
-                                                                      gamma = self.params['scheduler_gamma_2'])
+                                                                      gamma=self.params['scheduler_gamma_2'])
                         scheds.append(scheduler2)
                 except:
                     pass
@@ -167,23 +181,30 @@ class VAEXperiment(pl.LightningModule):
         transform = self.data_transforms()
 
         if self.params['dataset'] == 'cifar10':
-            dataset = CIFAR10(root = self.params['data_path'],
-                             train=True,
-                             transform=transform,
-                             download=False)
+            dataset = CIFAR10(root=self.params['data_path'],
+                              train=True,
+                              transform=transform,
+                              download=False)
         elif self.params['dataset'] == 'celeba':
-            dataset = CelebA(root = self.params['data_path'],
-                             split = "train",
+            dataset = CelebA(root=self.params['data_path'],
+                             split="train",
                              transform=transform,
                              download=False)
+        elif self.params['dataset'] == 'wikiart':
+            main_dataset = datasets.ImageFolder(root=self.params['data_path'],
+                                                transform=transform)
+            train_size = int(0.8 * len(main_dataset))
+            test_size = len(main_dataset) - train_size
+            dataset, _ = torch.utils.data.random_split(main_dataset, [train_size, test_size],
+                                                       generator=torch.Generator().manual_seed(42))
         else:
             raise ValueError('Undefined dataset type')
 
         self.num_train_imgs = len(dataset)
         return DataLoader(dataset,
-                          batch_size= self.params['batch_size'],
+                          batch_size=self.params['batch_size'],
                           num_workers=12,
-                          shuffle = True,
+                          shuffle=True,
                           drop_last=True)
 
     @data_loader
@@ -191,20 +212,33 @@ class VAEXperiment(pl.LightningModule):
         transform = self.data_transforms()
 
         if self.params['dataset'] == 'cifar10':
-            self.sample_dataloader = DataLoader(CIFAR10(root = self.params['data_path'],
-                                                 train=False,
-                                                 transform=transform,
-                                                 download=False),
-                                                 batch_size= 144,
-                                                 num_workers=12,
-                                                 shuffle = True,
-                                                 drop_last=True)
+            self.sample_dataloader = DataLoader(CIFAR10(root=self.params['data_path'],
+                                                        train=False,
+                                                        transform=transform,
+                                                        download=False),
+                                                batch_size=144,
+                                                num_workers=12,
+                                                shuffle=True,
+                                                drop_last=True)
             self.num_val_imgs = len(self.sample_dataloader)
         elif self.params['dataset'] == 'celeba':
             self.sample_dataloader = DataLoader(CelebA(root=self.params['data_path'],
                                                        split="test",
                                                        transform=transform,
                                                        download=False),
+                                                num_workers=12,
+                                                batch_size=144,
+                                                shuffle=True,
+                                                drop_last=True)
+            self.num_val_imgs = len(self.sample_dataloader)
+        elif self.params['dataset'] == 'wikiart':
+            main_dataset = datasets.ImageFolder(root=self.params['data_path'] + 'wikiart',
+                                                transform=transform)
+            train_size = int(0.8 * len(main_dataset))
+            test_size = len(main_dataset) - train_size
+            _, test_dataset = torch.utils.data.random_split(main_dataset, [train_size, test_size],
+                                                            generator=torch.Generator().manual_seed(42))
+            self.sample_dataloader = DataLoader(test_dataset,
                                                 num_workers=12,
                                                 batch_size=144,
                                                 shuffle=True,
@@ -218,7 +252,7 @@ class VAEXperiment(pl.LightningModule):
     def data_transforms(self):
 
         SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
-        SetScale = transforms.Lambda(lambda X: X/X.sum(0).expand_as(X))
+        SetScale = transforms.Lambda(lambda X: X / X.sum(0).expand_as(X))
 
         if self.params['dataset'] == 'cifar10':
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
@@ -232,7 +266,12 @@ class VAEXperiment(pl.LightningModule):
                                             transforms.Resize(self.params['img_size']),
                                             transforms.ToTensor(),
                                             SetRange])
+        elif self.params['dataset'] == 'wikiart':
+            transform = transforms.Compose([transforms.Resize(64),
+                                            transforms.RandomCrop(64),
+                                            transforms.ToTensor(),
+                                            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                                 std=[0.229, 0.224, 0.225])])
         else:
             raise ValueError('Undefined dataset type')
         return transform
-

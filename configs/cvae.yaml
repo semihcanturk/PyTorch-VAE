@@ -1,20 +1,21 @@
 model_params:
   name: 'ConditionalVAE'
   in_channels: 3
-  num_classes: 40
+  num_classes: 27
   latent_dim: 128
+  img_size: 64
 
 exp_params:
-  dataset: celeba
+  dataset: wikiart
   data_path: "../../../../../../miniscratch/canturks/data/"
   img_size: 64
   batch_size: 256 # Better to have a square number
-  LR: 0.0001
+  LR: 0.001
   weight_decay: 0.0
   scheduler_gamma: 0.95
 
 trainer_params:
-  gpus: [0]
+  gpus: 1
   max_epochs: 50
 
 logging_params:

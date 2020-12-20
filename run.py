@@ -19,7 +19,7 @@ if __name__ == '__main__':
                         dest="filename",
                         metavar='FILE',
                         help='path to the config file',
-                        default='./configs/infovae.yaml')
+                        default='./configs/cvae.yaml')
 
     args = parser.parse_args()
     with open(args.filename, 'r') as file:
