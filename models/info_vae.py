@@ -254,3 +254,8 @@ class InfoVAE(BaseVAE):
         """
 
         return self.forward(x)[0]
+
+    def embed(self, input: Tensor, **kwargs) -> List[Tensor]:
+        mu, log_var = self.encode(input)
+        z = self.reparameterize(mu, log_var)
+        return  z

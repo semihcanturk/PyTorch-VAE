@@ -181,3 +181,15 @@ class ConditionalVAE(BaseVAE):
         """
 
         return self.forward(x, **kwargs)[0]
+
+    def embed(self, input: Tensor, **kwargs) -> List[Tensor]:
+        y = kwargs['labels'].float()
+        embedded_class = self.embed_class(y)
+        embedded_class = embedded_class.view(-1, self.img_size, self.img_size).unsqueeze(1)
+        embedded_input = self.embed_data(input)
+
+        x = torch.cat([embedded_input, embedded_class], dim = 1)
+        mu, log_var = self.encode(x)
+
+        z = self.reparameterize(mu, log_var)
+        return z

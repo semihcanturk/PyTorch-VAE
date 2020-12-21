@@ -1,6 +1,7 @@
 import yaml
 import argparse
 import numpy as np
+import matplotlib as plt
 
 from models import *
 from experiment import VAEXperiment
@@ -26,7 +27,7 @@ with open(args.filename, 'r') as file:
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
 
-model_dict = torch.load('logs/ConditionalVAE/version_38/checkpoints/epoch=25.ckpt')
+model_dict = torch.load('celeba-epoch=07-val_loss=11.28.ckpt')
 newdict = dict()
 for k, v in model_dict['state_dict'].items():
     knew = k.split('.', 1)[1:][0]
@@ -34,13 +35,16 @@ for k, v in model_dict['state_dict'].items():
 
 model.load_state_dict(newdict)
 
-
 model.eval()
-
-feature_idx = np.random.randint(0, config['model_params']['num_classes'])
 input_vect = torch.zeros(config['exp_params']['batch_size'], config['model_params']['num_classes'])
-input_vect[:, feature_idx] = 1
-out = model.infer(input_vect)
-vutils.save_image(out.cpu().data, f"outputs/"f"feature_{feature_idx}.png", normalize=True, nrow=12)
+out = model.encode(input_vect)
+
+
+
+# feature_idx = np.random.randint(0, config['model_params']['num_classes'])
+# input_vect = torch.zeros(config['exp_params']['batch_size'], config['model_params']['num_classes'])
+# input_vect[:, feature_idx] = 1
+# out = model.infer(input_vect)
+# vutils.save_image(out.cpu().data, f"outputs/"f"feature_{feature_idx}.png", normalize=True, nrow=12)
 
 
