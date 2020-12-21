@@ -3,6 +3,7 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 import torch.distributions as dists
+import numpy as np
 from .types_ import *
 
 
@@ -158,11 +159,14 @@ class CSVAE(BaseVAE):
         :return: parameters of q(z|x), (MB, hid_dim)
         """
 
-        xy = torch.cat([x, y], dim=1)
+        x_features = self.encoder(x)
 
-        intermediate = self.encoder_x_to_z(x)
+        intermediate = self.encoder_x_to_z(x_features)
         z_mu = self.mu_x_to_z(intermediate)
         z_logvar = self.logvar_x_to_z(intermediate)
+
+        xy = torch.cat([x_features, y], dim=1)
+
 
         intermediate = self.encoder_xy_to_w(xy)
         w_mu_encoder = self.mu_xy_to_w(intermediate)
@@ -234,17 +238,14 @@ class CSVAE(BaseVAE):
 
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         y = kwargs['labels'].float()
-        embedded_class = self.embed_class(y)
-        embedded_class = embedded_class.view(-1, self.img_size, self.img_size).unsqueeze(1)
-        embedded_input = self.embed_data(input)
+        #embedded_class = self.embed_class(y)
+        #embedded_class = embedded_class.view(-1, self.img_size, self.img_size).unsqueeze(1)
+        #embedded_input = self.embed_data(input)
 
         #x = torch.cat([embedded_input, embedded_class], dim = 1)
         input, z, w_mu_encoder, w_logvar_encoder, w_mu_prior, w_logvar_prior, z_mu, z_logvar, w_encoder, w_prior, x_mu, \
-        x_logvar = self.encode(embedded_input, embedded_class)
+        x_logvar = self.encode(input, y)
 
-        z = self.reparameterize(z_mu, z_logvar)
-
-        z = torch.cat([z, y], dim = 1)
         return self.decode(input, z, w_mu_encoder, w_logvar_encoder, w_mu_prior,
                 w_logvar_prior, z_mu, z_logvar, w_encoder, w_prior, x_mu, x_logvar)
 
@@ -279,6 +280,15 @@ class CSVAE(BaseVAE):
         recons_loss = nn.MSELoss()(x_mu, x)
 
         # w_kl
+
+        w_mu_np = np.array(w_mu_encoder.cpu().detach())
+        w_logvar_np = np.array(w_logvar_encoder.cpu().detach())
+
+        if np.isnan(w_mu_np).any():
+            np.save('w_mu', w_mu_np)
+        if np.isnan(w_logvar_np).any():
+            np.save('w_logvar', w_logvar_np)
+
         w_dist = dists.MultivariateNormal(w_mu_encoder.flatten(),
                                           torch.diag(w_logvar_encoder.flatten().exp()))
         w_prior = dists.MultivariateNormal(w_mu_prior.flatten(),
@@ -288,8 +298,8 @@ class CSVAE(BaseVAE):
         # z_kl
         z_dist = dists.MultivariateNormal(z_mu.flatten(),
                                           torch.diag(z_logvar.flatten().exp()))
-        z_prior = dists.MultivariateNormal(torch.zeros(self.z_dim * z_mu.size()[0]).to(z_mu),
-                                           torch.eye(self.z_dim * z_mu.size()[0]).to(z_mu))
+        z_prior = dists.MultivariateNormal(torch.zeros(self.latent_dim * z_mu.size()[0]).to(z_mu),
+                                           torch.eye(self.latent_dim * z_mu.size()[0]).to(z_mu))
         z_kl = dists.kl.kl_divergence(z_dist, z_prior)
 
         # -H(y)

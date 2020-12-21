@@ -59,4 +59,5 @@ if __name__ == '__main__':
                      **config['trainer_params'])
 
     print(f"======= Training {config['model_params']['name']} =======")
+    print(config['exp_params']['LR'])
     runner.fit(experiment)
