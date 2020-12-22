@@ -3,6 +3,7 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from .types_ import *
+import numpy as np
 
 
 class InfoVAE(BaseVAE):
@@ -259,3 +260,20 @@ class InfoVAE(BaseVAE):
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
         return  z
+
+    def plot_latent_space(self, dim1=0, dim2=1, sample_dim=20, z=None):
+        samples = list()
+        if z is None:
+            z = torch.randn(1, self.latent_dim)
+
+        range_dim1 = np.arange(-2, 2, 4 / sample_dim)
+        range_dim2 = np.arange(-2, 2, 4 / sample_dim)
+
+        for i in range_dim1:
+            for j in range_dim2:
+                z_temp = z
+                z_temp[0, dim1] = i
+                z_temp[0, dim2] = j
+                out = self.decode(z_temp)
+                samples.append(out)
+        return torch.stack(samples).squeeze()

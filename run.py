@@ -45,7 +45,7 @@ if __name__ == '__main__':
     experiment = VAEXperiment(model,
                               config['exp_params'])
 
-    checkpoint_callback = ModelCheckpoint(monitor='val_loss', filename='celeba-{epoch:02d}-{val_loss:.2f}', save_top_k=-1)
+    checkpoint_callback = ModelCheckpoint(monitor='val_loss', filename=config['exp_params']['dataset'] + '-{epoch:02d}-{val_loss:.2f}', save_top_k=-1)
 
     runner = Trainer(default_root_dir=f"{tt_logger.save_dir}",
                      checkpoint_callback=True,
