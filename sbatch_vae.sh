@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=main
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=v100:2
+#SBATCH --gres=v100:1
 #SBATCH --mem=10G
 #SBATCH -o /home/mila/s/semih.canturk/VAELogs/slurm-%j.out
 module load python/3.7

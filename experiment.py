@@ -8,7 +8,7 @@ from utils import data_loader
 import pytorch_lightning as pl
 from torchvision import transforms, datasets
 import torchvision.utils as vutils
-from torchvision.datasets import CIFAR10, CelebA
+from torchvision.datasets import CIFAR10, CelebA, MNIST
 from torch.utils.data import DataLoader
 from PIL import ImageFile
 
@@ -38,9 +38,9 @@ class VAEXperiment(pl.LightningModule):
         real_img, labels = batch
         if len(labels.shape) == 1:
             if self.params['dataset'] == 'wikiart':
-                num_classes=27
+                num_classes = 27
             else:
-                num_classes=-1
+                num_classes = -1
             labels = torch.nn.functional.one_hot(labels, num_classes)
         self.curr_device = real_img.device
 
@@ -179,12 +179,16 @@ class VAEXperiment(pl.LightningModule):
     @data_loader
     def train_dataloader(self):
         transform = self.data_transforms()
-
-        if self.params['dataset'] == 'cifar10':
+        if self.params['dataset'] == 'mnist':
+            dataset = MNIST(root=self.params['data_path'],
+                            train=True,
+                            transform=transform,
+                            download=True)
+        elif self.params['dataset'] == 'cifar10':
             dataset = CIFAR10(root=self.params['data_path'],
                               train=True,
                               transform=transform,
-                              download=False)
+                              download=True)
         elif self.params['dataset'] == 'celeba':
             dataset = CelebA(root=self.params['data_path'],
                              split="train",
@@ -210,12 +214,21 @@ class VAEXperiment(pl.LightningModule):
     @data_loader
     def val_dataloader(self):
         transform = self.data_transforms()
-
-        if self.params['dataset'] == 'cifar10':
+        if self.params['dataset'] == 'mnist':
+            self.sample_dataloader = DataLoader(MNIST(root=self.params['data_path'],
+                                                      train=True,
+                                                      transform=transform,
+                                                      download=True),
+                                                batch_size=144,
+                                                num_workers=12,
+                                                shuffle=True,
+                                                drop_last=True)
+            self.num_val_imgs = len(self.sample_dataloader)
+        elif self.params['dataset'] == 'cifar10':
             self.sample_dataloader = DataLoader(CIFAR10(root=self.params['data_path'],
                                                         train=False,
                                                         transform=transform,
-                                                        download=False),
+                                                        download=True),
                                                 batch_size=144,
                                                 num_workers=12,
                                                 shuffle=True,
@@ -254,7 +267,12 @@ class VAEXperiment(pl.LightningModule):
         SetRange = transforms.Lambda(lambda X: 2 * X - 1.)
         SetScale = transforms.Lambda(lambda X: X / X.sum(0).expand_as(X))
 
-        if self.params['dataset'] == 'cifar10':
+        if self.params['dataset'] == 'mnist':
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])
+        elif self.params['dataset'] == 'cifar10':
             transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                             transforms.CenterCrop(148),
                                             transforms.Resize(self.params['img_size']),

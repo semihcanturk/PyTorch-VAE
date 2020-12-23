@@ -177,7 +177,7 @@ class VanillaVAE(BaseVAE):
     def embed(self, input: Tensor, **kwargs) -> List[Tensor]:
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
-        return  z
+        return  mu
 
     def plot_latent_space(self, dim1=0, dim2=1, sample_dim=20, z=None):
         samples = list()

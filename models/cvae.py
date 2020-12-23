@@ -3,6 +3,7 @@ from models import BaseVAE
 from torch import nn
 from torch.nn import functional as F
 from .types_ import *
+import numpy as np
 
 
 class ConditionalVAE(BaseVAE):
@@ -18,6 +19,7 @@ class ConditionalVAE(BaseVAE):
 
         self.latent_dim = latent_dim
         self.img_size = img_size
+        self.num_classes = num_classes
 
         self.embed_class = nn.Linear(num_classes, img_size * img_size)
         self.embed_data = nn.Conv2d(in_channels, in_channels, kernel_size=1)
@@ -193,3 +195,25 @@ class ConditionalVAE(BaseVAE):
 
         z = self.reparameterize(mu, log_var)
         return z
+
+    def plot_latent_space(self, dim1=0, dim2=1, sample_dim=10, z=None, y=None):
+        samples = list()
+        if z is None:
+            z = torch.randn(1, self.latent_dim)
+
+        if y is None:
+            y = torch.randint(0, self.num_classes, (1,))
+            y = torch.nn.functional.one_hot(y, self.num_classes)
+
+        range_dim1 = np.arange(-2, 2, 4 / sample_dim)
+        range_dim2 = np.arange(-2, 2, 4 / sample_dim)
+
+        for i in range_dim1:
+            for j in range_dim2:
+                z_temp = z
+                z_temp[0, dim1] = i
+                z_temp[0, dim2] = j
+                z_temp = torch.cat([z_temp, y], dim=1)
+                out = self.decode(z_temp)
+                samples.append(out)
+        return torch.stack(samples).squeeze()
