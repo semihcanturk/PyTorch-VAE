@@ -1,21 +1,3 @@
-This repo is based on the https://github.com/AntixK/PyTorch-VAE/ repository, with a few additional changes to make it more up-to-date:
-- Updated to Python 3.7
-- Updated to PyTorch 1.7
-- Updated to PyTorch Lightning 1.0.8
-- Better support for the CelebA dataset
-
-It also introduces a few features and auxillary tools:
-1) Inference function for Conditional VAE (`cvae.infer(y, z=None)`), which enables sampling from the latent space while conditioning on feature vector `y`and also optionally the latent space `z` itself.
-2) Added `plot_latent_space` methods for Vanilla VAE, Conditional VAE and Info VAE models, alog with `plot_latent_space.py`, which provides various functions (that in turn use the class methods) to plot the latent space of the VAE models in 2D using any two dimensions input by the user. A few examples are provided in `plot_latent_space_examples.py`.
-3) Added `latent_space_visualization.py`, a script that visualizes how different features (e.g. hair color: black, brown, blonde, gray) are represented in the latent dimension using tSNE plots, or by direct plotting in 3D (if a latent dimension of size 3 is used).
-4) Added `inference_cvae.py` which puts this inference function to use with two functions: `plot_cvae_classes()` and `plot_cvae_vector(idxs)`. The former randomly samples examples from the latent space while conditioning on *each* feature, while the latter takes in an `idxs` vector that allows combining features to condition on. A few examples are provided in `inference_cvae_examples.py`.
-5) Added an implementation of the Conditional Subspace VAE (CSVAE) from "Learning latent subspaces in variational autoencoders" (NeurIPS '18), based on https://github.com/alexlyzhov/latent-subspaces. The original repo was problematic, and we attempted to alleviate these issues while also fitting this original repository into a form that resembles the other models in the original repo (and one that would work with PyTorch Lightning using `experiment.py`, as a result). At the moment, it is not working fully, so any input is welcome.
-
-
-
-- Support for the WikiArt dataset
-- Added sample SBATCH scripts for SLURM usage.
-
 <h1 align="center">
   <b>PyTorch VAE</b><br>
 </h1>
@@ -29,8 +11,27 @@ It also introduces a few features and auxillary tools:
         <img src="https://img.shields.io/badge/license-Apache2.0-blue.svg" /></a>
          <a href= "https://twitter.com/intent/tweet?text=PyTorch-VAE:%20Collection%20of%20VAE%20models%20in%20PyTorch.&url=https://github.com/AntixK/PyTorch-VAE">
         <img src="https://img.shields.io/twitter/url/https/shields.io.svg?style=social" /></a>
-
 </p>
+
+This repo is based on the https://github.com/AntixK/PyTorch-VAE/ repository, with a few additional changes to make it more up-to-date:
+
+- Updated to Python 3.7
+- Updated to PyTorch 1.7
+- Updated to PyTorch Lightning 1.0.8
+- Better support for the CelebA dataset
+
+It also introduces a few features and auxillary tools:
+
+1) Inference function for Conditional VAE (`cvae.infer(y, z=None)`), which enables sampling from the latent space while conditioning on feature vector `y`and also optionally the latent space `z` itself.
+2) Added `plot_latent_space` methods for Vanilla VAE, Conditional VAE and Info VAE models, alog with `plot_latent_space.py`, which provides various functions (that in turn use the class methods) to plot the latent space of the VAE models in 2D using any two dimensions input by the user. A few examples are provided in `plot_latent_space_examples.py`.
+3) Added `latent_space_visualization.py`, a script that visualizes how different features (e.g. hair color: black, brown, blonde, gray) are represented in the latent dimension using tSNE plots, or by direct plotting in 3D (if a latent dimension of size 3 is used).
+4) Added `inference_cvae.py` which puts this inference function to use with two functions: `plot_cvae_classes()` and `plot_cvae_vector(idxs)`. The former randomly samples examples from the latent space while conditioning on *each* feature, while the latter takes in an `idxs` vector that allows combining features to condition on. A few examples are provided in `inference_cvae_examples.py`.
+5) Added an implementation of the Conditional Subspace VAE (CSVAE) from "Learning latent subspaces in variational autoencoders" (NeurIPS '18), based on https://github.com/alexlyzhov/latent-subspaces. The original repo was problematic, and we attempted to alleviate these issues while also fitting this original repository into a form that resembles the other models in the original repo (and one that would work with PyTorch Lightning using `experiment.py`, as a result). At the moment, it is not working fully, so any input is welcome.
+6) Added support for the WikiArt dataset
+7) Added sample SBATCH scripts for SLURM usage.
+
+---------
+---------
 
 A collection of Variational AutoEncoders (VAEs) implemented in pytorch with focus on reproducibility. The aim of this project is to provide
 a quick and simple working example for many of the cool VAE models out there. All the models are trained on the [CelebA dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
