@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3b91c17b-b945-46c1-a528-099578211fe3" name="mila_test">
+        <fileTransfer rootFolder="/home/mila/s/semih.canturk" accessType="SFTP" host="login.server.mila.quebec" port="2222" sshConfigId="05bccaac-3d3e-437f-9754-7cf7f805afac" sshConfig="semih.canturk@mila.quebec@login.server.mila.quebec:2222 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
