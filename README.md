@@ -4,9 +4,9 @@
 
 <p align="center">
       <a href="https://www.python.org/">
-        <img src="https://img.shields.io/badge/Python-3.5-ff69b4.svg" /></a>
+        <img src="https://img.shields.io/badge/Python-3.7-ff69b4.svg" /></a>
        <a href= "https://pytorch.org/">
-        <img src="https://img.shields.io/badge/PyTorch-1.3-2BAF2B.svg" /></a>
+        <img src="https://img.shields.io/badge/PyTorch-1.7-2BAF2B.svg" /></a>
        <a href= "https://github.com/AntixK/PyTorch-VAE/blob/master/LICENSE.md">
         <img src="https://img.shields.io/badge/license-Apache2.0-blue.svg" /></a>
          <a href= "https://twitter.com/intent/tweet?text=PyTorch-VAE:%20Collection%20of%20VAE%20models%20in%20PyTorch.&url=https://github.com/AntixK/PyTorch-VAE">
@@ -21,9 +21,9 @@ a radically different architecture (Ex. VQ VAE uses Residual layers and no Batch
 Here are the [results](https://github.com/AntixK/PyTorch-VAE/blob/master/README.md#--results) of each model.
 
 ### Requirements
-- Python >= 3.5
-- PyTorch >= 1.3
-- Pytorch Lightning >= 0.6.0 ([GitHub Repo](https://github.com/PyTorchLightning/pytorch-lightning/tree/deb1581e26b7547baf876b7a94361e60bb200d32))
+- Python >= 3.7
+- PyTorch >= 1.7.1
+- Pytorch Lightning >= 1.0.8 ([GitHub Repo](https://github.com/PyTorchLightning/pytorch-lightning/tree/deb1581e26b7547baf876b7a94361e60bb200d32))
 - CUDA enabled computing device
 
 ### Installation
