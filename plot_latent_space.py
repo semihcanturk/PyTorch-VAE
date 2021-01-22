@@ -26,7 +26,6 @@ def plot_latent_space(model, dim1=None, dim2=None, sample_dim=10, dir='outputs/l
     if dim2 is None:
         dim2 = np.random.randint(0, config['model_params']['latent_dim'])
 
-
     grid = model.plot_latent_space(dim1, dim2, sample_dim)
     dir = dir + f"{config['exp_params']['dataset']}_{config['model_params']['name']}_LD={config['model_params']['latent_dim']}/"
     if not os.path.exists(dir):
