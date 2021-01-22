@@ -25,16 +25,17 @@ It also introduces a few features and auxillary tools:
 1) Inference function for Conditional VAE (`cvae.infer(y, z=None)`), which enables sampling from the latent space while conditioning on feature vector `y` and also optionally the latent space `z` itself.
 2) Added `plot_latent_space` methods for Vanilla VAE, Conditional VAE and Info VAE models, alog with `plot_latent_space.py`, which provides various functions (that in turn use the class methods) to plot the latent space of the VAE models in 2D using any two dimensions input by the user. A few examples are provided in `plot_latent_space_examples.py`:
 
-<img src="/sample_images/latent_space_0,1.jpg?raw=true" style="margin: 50" alt="Your image title" width="250"/>   <img src="/sample_images/latent_space_0,2.jpg?raw=true" alt="Your image title" width="250"/>   <img src="/sample_images/latent_space_1,2.jpg?raw=true" alt="Your image title" width="250"/>
+<img src="/sample_images/latent_space_0,1.jpg?raw=true" style="margin: 50" title="latent space 0,1" width="250"/>   <img src="/sample_images/latent_space_0,2.jpg?raw=true" title="latent space 0,2" width="250"/>   <img src="/sample_images/latent_space_1,2.jpg?raw=true" title="latent space 1,2" width="250"/>
+
 
 
 3) Added `latent_space_visualization.py`, a script that visualizes how different features (e.g. hair color: black, brown, blonde, gray) are represented in the latent dimension using tSNE plots, or by direct plotting in 3D (if a latent dimension of size 3 is used).
 
-<img src="/sample_images/embedInfoVAE128LD_HAIR.jpg?raw=true" style="margin: 50" alt="Your image title" width="250"/>   <img src="/sample_images/embedInfoVAE3LD_HAIR.jpg?raw=true" style="margin: 50" alt="Your image title" width="250"/> 
+<img src="/sample_images/embedInfoVAE128LD_HAIR.jpg?raw=true" style="margin: 50" title="128-latent-dim tSNE" width="250"/>   <img src="/sample_images/embedInfoVAE3LD_HAIR.jpg?raw=true" style="margin: 50" alt="3D plot" width="250"/> 
 
 4) Added `inference_cvae.py` which puts this inference function to use with two functions: `plot_cvae_classes()` and `plot_cvae_vector(idxs)`. The former randomly samples examples from the latent space while conditioning on *each* feature, while the latter takes in an `idxs` vector that allows combining features to condition on. A few examples are provided in `inference_cvae_examples.py`.
 
-<img src="/sample_images/15_Eyeglasses.jpg?raw=true" style="margin: 50" alt="Your image title" width="250"/>   <img src="/sample_images/8_Black_Hair.jpg?raw=true" alt="Your image title" width="250"/>   <img src="/sample_images/9_Blond_Hair.jpg?raw=true" alt="Your image title" width="250"/>
+<img src="/sample_images/15_Eyeglasses.jpg?raw=true" style="margin: 50" title="Eyeglasses" width="250"/>   <img src="/sample_images/8_Black_Hair.jpg?raw=true" title="Black Hair" width="250"/>   <img src="/sample_images/9_Blond_Hair.jpg?raw=true" title="Blonde Hair" width="250"/>
 
 5) Added an implementation of the Conditional Subspace VAE (CSVAE) from "Learning latent subspaces in variational autoencoders" (NeurIPS '18), based on https://github.com/alexlyzhov/latent-subspaces. The original repo was problematic, and we attempted to alleviate these issues while also fitting this original repository into a form that resembles the other models in the original repo (and one that would work with PyTorch Lightning using `experiment.py`, as a result). At the moment, it is not working fully, so any input is welcome.
 6) Added support for the WikiArt dataset
